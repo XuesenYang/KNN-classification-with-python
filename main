@@ -1,0 +1,59 @@
+from sklearn.model_selection import StratifiedKFold
+import numpy as np
+import pandas as pd
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+from sklearn import metrics
+from sklearn.metrics import f1_score
+sub_df = pd.DataFrame(np.random.randn(30, 5))
+from sklearn.metrics import precision_recall_curve
+for i in range(30):
+    PATH = "/Users/yangxuesen/Downloads/"
+    data = pd.read_csv(PATH + "ionosphere_data_kaggle.csv")
+    data.shape
+    features_ID = [c for c in data.columns if c not in ['label']]
+    features_data = data.drop(['label'], axis=1)
+    target_data = data['label']
+    folds = StratifiedKFold(n_splits=10, shuffle=False)
+    test_proba = np.zeros(len(features_data))
+    all_proba = np.zeros(len(features_data))
+    CA = np.zeros(len(features_data))
+    PR = np.zeros(len(features_data))
+    mean_CA = np.zeros(1)
+    mean_precision = np.zeros(1)
+    mean_recall = np.zeros(1)
+    mean_f1 = np.zeros(1)
+    mean_AUC = np.zeros(1)
+    for fold_, (train, test) in enumerate(folds.split(features_data.values, target_data.values)):
+        train_data = features_data.values[train][:]
+        train_taget = target_data.values[train]
+        test_data = features_data.values[test][:]
+        neigh = KNeighborsClassifier(n_neighbors=4)
+        neigh.fit(train_data, train_taget)
+        test_proba[test] = neigh.predict(test_data)
+        all_predict = neigh.predict(features_data.values)
+        all_proba = neigh.predict_proba(features_data.values)
+        all_proba_positive = neigh.predict_proba(features_data.values)[:, 1]
+        CA = accuracy_score(target_data.values, all_predict)  # acc value
+        fpr, tpr, thresholds = metrics.roc_curve(target_data.values, all_proba_positive, pos_label=1)
+        precision = metrics.precision_score(target_data.values, all_predict)  # precision value
+        recall = metrics.recall_score(target_data.values, all_predict)  # recall value
+        f1 = f1_score(target_data.values, all_predict, average='macro')  # f1 value
+        AUC = metrics.auc(fpr, tpr)  # auc value
+        mean_CA += CA / folds.n_splits
+        mean_precision += precision / folds.n_splits
+        mean_recall += recall / folds.n_splits
+        mean_f1+= f1 / folds.n_splits
+        mean_AUC += AUC / folds.n_splits
+    #print(sub_df)
+    sub_df.columns = ['mean_CA', 'mean_precision', 'mean_recall', 'mean_f1', 'mean_AUC']
+    sub_df["mean_CA"][i] = mean_CA
+    sub_df["mean_precision"][i] = mean_precision
+    sub_df["mean_recall"][i] = mean_recall
+    sub_df["mean_f1"][i] = mean_f1
+    sub_df["mean_AUC"][i] = mean_AUC
+    sub_df.to_csv("submission.csv", index=False)
+    print(sub_df)
+
+
+
