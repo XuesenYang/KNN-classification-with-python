@@ -1,7 +1,7 @@
 # KNN-classification-with-python
 Layered sampling 10 fold cross validation＋30runtimes＋Multiple assessment.        
 
-# description     
+# Description     
 method:KNN-classification.       
 Verification mode：Layered sampling 10 fold cross validation.    
 Assessment method：l1, acc, auc, precision and recall.    
